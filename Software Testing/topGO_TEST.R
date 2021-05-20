@@ -1,5 +1,7 @@
 #http://127.0.0.1:11052/library/topGO/doc/topGO.pdf
 
+#nessecary packages can be installed via BiocManager
+
 #Libraries
 library(topGO)
 library(ALL)
@@ -18,7 +20,6 @@ library(package=affyLib,character.only=TRUE)
 topDiffGenes=function(allScore){
   return(allScore<0.01)
 }
-#Is predefined to 0.01 in base package
 
 #see total number of top expressed genes
 sum(topDiffGenes(geneList))
@@ -55,7 +56,6 @@ resultKS.elim#elim method
 #Comparing KS vs Fisher and Classic vs Elim
 #Shows the n top nodes based on orderBy
 #ranksOf shows ranks in selected result
-n=10
 allRes=GenTable(sampleGOdata,
                 classicFisher=resultFisher,
                 elimFisher=resultFisher.elim,
@@ -63,7 +63,7 @@ allRes=GenTable(sampleGOdata,
                 elimKS=resultKS.elim,
                 orderBy="classicKS",
                 ranksOf="classicFisher",
-                topNodes=n)
+                topNodes=0)
 allRes
 
 #P-Values comparison of classic and elim methods for Fisher
