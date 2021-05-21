@@ -54,8 +54,3 @@ prot.MQ=readProteinGroups(proteinGroupsFile,meta)
 #Differential expression, passes through limma package
 #defualts B-H adjust
 res=limmaDE(prodat,conditions=c("A","B"),transform.fun=log2,sig.level=0.05)
-
-
-
-
-

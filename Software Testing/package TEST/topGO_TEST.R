@@ -108,14 +108,14 @@ filter=filterfun(pOverA(0.20,log2(100)),function(x)(IQR(x)>0.25))
 #filter out genes under the 1st quartile
 
 selProbes=genefilter(ALL,filter)
-eset=ALL[selProbes,]
-eset
+esetGO=ALL[selProbes,]
+esetGO
 
 #Get P-values from chosen statistics for interresting genes
-y=as.integer(sapply(eset$BT,function(x) return(substr(x,1,1)=='T')))
+y=as.integer(sapply(esetGO$BT,function(x) return(substr(x,1,1)=='T')))
 #One-hot encode between two class labels
 
-geneList=getPvalues(exprs(eset),
+geneList=getPvalues(exprs(esetGO),
                     classlabel=y,
                     test="t",
                     alternative="greater",
