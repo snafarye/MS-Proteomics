@@ -75,7 +75,7 @@ gw=import("genewalk")
 #For small molecule discovery and analysis
 
 PHP=read_csv("https://raw.githubusercontent.com/CharlesColgan/MS-Proteomics/main/Software%20Testing/phosphoPeptide.csv")
-proteins=read_csv("https://raw.githubusercontent.com/CharlesColgan/MS-Proteomics/main/Software%20Testing/proteins.csv")
+proteins=read_csv("https://raw.githubusercontent.com/CharlesColgan/MS-Proteomics/main/Software%20Testing/SampleDDAdata/SampleDDAdata/proteins.csv")
 peptide=read_csv("https://raw.githubusercontent.com/CharlesColgan/MS-Proteomics/main/Software%20Testing/SampleDDAdata/SampleDDAdata/proteins.csv")
 protein_peptides=read_csv("https://raw.githubusercontent.com/CharlesColgan/MS-Proteomics/main/Software%20Testing/SampleDDAdata/SampleDDAdata/protein-peptides.csv")
 
@@ -84,3 +84,6 @@ PHP$AScore=factor(PHP$AScore)
 PHP$Accession=factor(PHP$Accession)
 PHP$"Source File"=factor(PHP$"Source File")
 summary(PHP)
+summary(protiens)
+summary(peptide)
+summary(protein_peptides)
