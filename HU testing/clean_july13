@@ -13,7 +13,6 @@ library(tidyr)
 cath1   <- gather(merge_cath_5min, Time, Value, "5min":"24h", factor_key = TRUE)
 
 
-
 #plot(merge_after_5min$`5min`, merge_after_5min$`HU Amount (ug)`)
 boxplot(merge_cath_5min$`5min`)
 #
@@ -63,7 +62,11 @@ plot(data.Filt$`5min`)
 
 #rename data frame
 merge_cath_5min_noOutliers = data.Filt
-write.csv(merge_cath_5min_noOutliers, "merge_after5mins_noOutliers.csv")
+# pivot the time from 5min to 24 hours again
+library(tidyr)
+merge_cath_5min_noOutliers_pivot   <- gather(merge_cath_5min_noOutliers, Time, Value, "5min":"24h", factor_key = TRUE)
+
+write.csv(merge_cath_5min_noOutliers_pivot, "merge_cath_5min_noOutliers_pivot.csv")
 
 
 #####
@@ -75,3 +78,35 @@ write.csv(mergeing_all,"mergeing_all.csv")
 # merge the samples after 5mins with HU by UniProt ID
 merge_after5mins <-merge(cath1, HU, by='PG.UniProtIds')
 write.csv(merge_after5mins,"merge_after5mins_with_outliers.csv")
+
+##
+# possible different types of tests to explore
+#cor
+cor(data.Filt[,c(13,4:10)])
+pairs(data.Filt[,c(13,4:10)])
+
+# cor using the spearman method and log of the scatter plots
+cor(data.Filt[,c(13,4:10)],method='spearman')
+pairs(log(data.Filt[,c(13,4:10)]))
+
+hist(data.Filt$`5min`)
+hist(data.Filt$`15min`)
+hist(data.Filt$`30min`)
+hist(data.Filt$`3h`)
+
+hist(data.Filt$`HU Amount (ug)`)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
