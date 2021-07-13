@@ -1,1 +1,43 @@
 
+plot(dt$`5min (ug)`)
+
+
+x <- dt$`5min (ug)`
+data = dt[,4:10]
+findOutlier <- function(data, cutoff = 3) {
+## Calculate the sd
+sds <- apply(data, 2, sd, na.rm = TRUE)
+## Identify the cells with value greater than cutoff * sd (column wise)
+result <- mapply(function(d, s) {
+  which(d > cutoff * s)
+}, data, sds)
+result
+}
+## get a list of outliers for the samples 
+outliers <- findOutlier(dt)
+outliers
+
+## remove the outliers
+removeOutlier <- function(data, outliers) {
+  result <- mapply(function(d, o) {
+    res <- d
+    res[o] <- NA
+    return(res)
+  }, data, outliers)
+  return(as.data.frame(result))
+}
+
+dataFilt <- removeOutlier(dt, outliers)
+dataFilt
+
+data.Filt<-na.omit(dataFilt)
+
+col.num <- c("X5min..ug."   ,            "X15min..ug."      ,        "X30min..ug."    ,         
+              "X3h..ug."   ,              "X6h..ug."       ,          "X18h..ug."    ,           
+              "X24h..ug." , "Amount..ug."       )
+data.Filt[col.num]<-sapply(data.Filt[col.num],as.numeric)
+sapply(data.Filt,class)
+
+boxplot(data.Filt$X5min..ug.)
+
+
