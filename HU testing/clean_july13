@@ -1,0 +1,77 @@
+
+## upload data
+cath_all         <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter")
+cath_after_5mins <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter_after 5min")
+HU               <- read_excel("20200707_Protein amount.xlsx", sheet = "human urine solution")
+
+
+# merge the columnsb by Uni Prot ID
+merge_cath_5min <- merge(cath_after_5mins, HU, by= 'PG.UniProtIds')
+
+# pivot the time from 5min to 24 hours
+library(tidyr)
+cath1   <- gather(merge_cath_5min, Time, Value, "5min":"24h", factor_key = TRUE)
+
+
+
+#plot(merge_after_5min$`5min`, merge_after_5min$`HU Amount (ug)`)
+boxplot(merge_cath_5min$`5min`)
+#
+plot(merge_cath_5min$`5min`)
+
+
+
+data = merge_cath_5min[,4:10]
+findOutlier <- function(data, cutoff = 3) {
+  ## Calculate the sd
+  sds <- apply(data, 2, sd, na.rm = TRUE)
+  ## Identify the cells with value greater than cutoff * sd (column wise)
+  result <- mapply(function(d, s) {
+    which(d > cutoff * s)
+  }, data, sds)
+  result
+}
+## get a list of outliers for the samples 
+outliers <- findOutlier(merge_cath_5min)
+outliers
+
+## remove the outliers
+removeOutlier <- function(data, outliers) {
+  result <- mapply(function(d, o) {
+    res <- d
+    res[o] <- NA
+    return(res)
+  }, data, outliers)
+  return(as.data.frame(result))
+}
+
+dataFilt <- removeOutlier(merge_cath_5min, outliers)
+dataFilt
+
+
+# from 535 --> 506 (removed 29 outliers)
+data.Filt<-na.omit(dataFilt)
+colnames(data.Filt)
+col.num <- c("5min","15min",  "30min" ,      "3h"  , "6h" ,                     
+              "18h" ,  "24h"  ,"HU Amount (ug)"    )
+data.Filt[col.num]<-sapply(data.Filt[col.num],as.numeric)
+sapply(data.Filt,class)
+
+#oberve the visualization boxplot and scatter plot for 5 mins
+boxplot(data.Filt$`5min`)
+plot(data.Filt$`5min`)
+
+#rename data frame
+merge_cath_5min_noOutliers = data.Filt
+write.csv(merge_cath_5min_noOutliers, "merge_after5mins_noOutliers.csv")
+
+
+#####
+# merge all of the sample with HU by UniProd IDS
+mergeing_all<- merge(cath_all,HU,by='PG.UniProtIds')
+write.csv(mergeing_all,"mergeing_all.csv")
+
+
+# merge the samples after 5mins with HU by UniProt ID
+merge_after5mins <-merge(cath1, HU, by='PG.UniProtIds')
+write.csv(merge_after5mins,"merge_after5mins_with_outliers.csv")
