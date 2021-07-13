@@ -89,10 +89,16 @@ pairs(data.Filt[,c(13,4:10)])
 cor(data.Filt[,c(13,4:10)],method='spearman')
 pairs(log(data.Filt[,c(13,4:10)]))
 
+par(mfrow=c(2, 4))
 hist(data.Filt$`5min`)
 hist(data.Filt$`15min`)
 hist(data.Filt$`30min`)
 hist(data.Filt$`3h`)
+hist(data.Filt$`6h`)
+hist(data.Filt$`18h`)
+hist(data.Filt$`24h`)
+
+
 
 hist(data.Filt$`HU Amount (ug)`)
 
