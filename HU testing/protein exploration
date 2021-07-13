@@ -1,0 +1,88 @@
+
+## upload data
+cath <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter_after 5min")
+HU <- read_excel("20200707_Protein amount.xlsx", sheet = "human urine solution")
+cath_sheet5<-read_excel("20200707_Protein amount.xlsx", sheet = "Sheet5")
+cath_all <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter")
+
+
+
+# pivot the time from 5min to 24 hours
+library(tidyr)
+cath1<- gather(cath_sheet5, Time, Value, "5min":"24h", factor_key = TRUE)
+
+
+
+# merge the columns
+merge_after_5min <- merge(cath, HU, by= 'PG.UniProtIds')
+
+#plot(merge_after_5min$`5min`, merge_after_5min$`HU Amount (ug)`)
+boxplot(merge_after_5min$`5min`)
+#
+plot(merge_after_5min$`5min`)
+
+
+x <- merge_after_5min$`5min (ug)`
+data = merge_after_5min[,4:10]
+findOutlier <- function(data, cutoff = 3) {
+  ## Calculate the sd
+  sds <- apply(data, 2, sd, na.rm = TRUE)
+  ## Identify the cells with value greater than cutoff * sd (column wise)
+  result <- mapply(function(d, s) {
+    which(d > cutoff * s)
+  }, data, sds)
+  result
+}
+## get a list of outliers for the samples 
+outliers <- findOutlier(merge_after_5min)
+outliers
+
+## remove the outliers
+removeOutlier <- function(data, outliers) {
+  result <- mapply(function(d, o) {
+    res <- d
+    res[o] <- NA
+    return(res)
+  }, data, outliers)
+  return(as.data.frame(result))
+}
+
+dataFilt <- removeOutlier(merge_after_5min, outliers)
+dataFilt
+
+data.Filt<-na.omit(dataFilt)
+colnames(data.Filt)
+col.num <- c("5min","15min",  "30min" ,      "3h"  , "6h" ,                     
+              "18h" ,  "24h"  ,"HU Amount (ug)"    )
+data.Filt[col.num]<-sapply(data.Filt[col.num],as.numeric)
+sapply(data.Filt,class)
+
+boxplot(data.Filt$`5min`)
+
+#reanme
+merge_after_5min = data.Filt
+write.csv(merge_after_5min, "merge_after5mins.csv")
+
+
+#
+
+mergeing<- merge(cath_all,HU,by='PG.UniProtIds')
+write.csv(mergeing,"mergeing.csv")
+
+
+
+merge_df<-merge(cath1, HU, by='PG.UniProtIds')
+write.csv(merge_df,"merge_df.csv")
+
+
+
+merge_sheet5 <- merge(cath_sheet5,HU, by = 'PG.UniProtIds')
+write.csv(merge_sheet5, "merge_sheet5.csv")
+
+
+
+cath_all <- read_excel("20200707_Protein amount (1).xlsx", sheet = "on catheter")
+merge_all <- merge(cath_all,HU, by ='PG.UniProtIds' )
+write.csv(merge_all, "merge_all.csv")
+
+
