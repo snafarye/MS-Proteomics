@@ -1,23 +1,30 @@
 
-## upload data
+## upload the data from the excel file 20200707_Protein amount
+library(readxl)
 cath_all         <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter")
 cath_after_5mins <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter_after 5min")
 HU               <- read_excel("20200707_Protein amount.xlsx", sheet = "human urine solution")
 
 
-# merge the columnsb by Uni Prot ID
+# merge the columns by UniProt ID for the data 'on catheter starting after 5 mins' and 'HU' 
 merge_cath_5min <- merge(cath_after_5mins, HU, by= 'PG.UniProtIds')
-
-# pivot the time from 5min to 24 hours
-library(tidyr)
-cath1   <- gather(merge_cath_5min, Time, Value, "5min":"24h", factor_key = TRUE)
+dim(merge_cath_5min)  # get a total of 535 cases
 
 
-#plot(merge_after_5min$`5min`, merge_after_5min$`HU Amount (ug)`)
+##########################################################################
+## view visualization graphs box plots and scatter plots
 boxplot(merge_cath_5min$`5min`)
-#
 plot(merge_cath_5min$`5min`)
+boxplot(merge_cath_5min$`15min`)
 
+
+# note here we are using the pairs plot to get a matrix scatter plot of our selected variables 
+pairs(merge_cath_5min[,c(13,4:10)])       # regular graph of the data
+pairs(log(merge_cath_5min[,c(13,4:10)]))  # log of the data
+
+#have some outliers
+#############################################################################
+# remove the outliers we will keep all values within 3 standard deviations from the mean
 
 
 data = merge_cath_5min[,4:10]
@@ -30,7 +37,7 @@ findOutlier <- function(data, cutoff = 3) {
   }, data, sds)
   result
 }
-## get a list of outliers for the samples 
+## get a list of outliers for the samples based on data frame index
 outliers <- findOutlier(merge_cath_5min)
 outliers
 
@@ -44,26 +51,31 @@ removeOutlier <- function(data, outliers) {
   return(as.data.frame(result))
 }
 
+# each outlier is removed and replaced with NA
 dataFilt <- removeOutlier(merge_cath_5min, outliers)
-dataFilt
+View(dataFilt)
 
-
-# from 535 --> 506 (removed 29 outliers)
+# omit every row that has NA value
+# from 535 --> 506 cases ==> (removed 29 total outliers)
 data.Filt<-na.omit(dataFilt)
 colnames(data.Filt)
 col.num <- c("5min","15min",  "30min" ,      "3h"  , "6h" ,                     
               "18h" ,  "24h"  ,"HU Amount (ug)"    )
-data.Filt[col.num]<-sapply(data.Filt[col.num],as.numeric)
+data.Filt[col.num]<-sapply(data.Filt[col.num],as.numeric)  # change these columns back to numeric 
 sapply(data.Filt,class)
 
-#oberve the visualization boxplot and scatter plot for 5 mins
-boxplot(data.Filt$`5min`)
+#observe the visualization boxplot and scatter plot for 5 mins
+# still have what could be considered as an outlier, but still improved from before 
+boxplot(data.Filt$`5min`)  
 plot(data.Filt$`5min`)
 
 #rename data frame
 merge_cath_5min_noOutliers = data.Filt
+write.csv(merge_cath_5min_noOutliers, "merge_cath_5min_noOutliers.csv")
+
 # pivot the time from 5min to 24 hours again
 library(tidyr)
+#pivot the time sample into one column
 merge_cath_5min_noOutliers_pivot   <- gather(merge_cath_5min_noOutliers, Time, Value, "5min":"24h", factor_key = TRUE)
 
 write.csv(merge_cath_5min_noOutliers_pivot, "merge_cath_5min_noOutliers_pivot.csv")
@@ -75,13 +87,22 @@ mergeing_all<- merge(cath_all,HU,by='PG.UniProtIds')
 write.csv(mergeing_all,"mergeing_all.csv")
 
 
+# pivot the time from 5min to 24 hours
+#library(tidyr)
+cath1   <- gather(merge_cath_5min, Time, Value, "5min":"24h", factor_key = TRUE)
 # merge the samples after 5mins with HU by UniProt ID
 merge_after5mins <-merge(cath1, HU, by='PG.UniProtIds')
 write.csv(merge_after5mins,"merge_after5mins_with_outliers.csv")
 
-##
+
+
+
+
+
+
+#------tests-----------
 # possible different types of tests to explore
-#cor
+#correlation test refular data set
 cor(data.Filt[,c(13,4:10)])
 pairs(data.Filt[,c(13,4:10)])
 
