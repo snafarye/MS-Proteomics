@@ -128,6 +128,176 @@ hist(data.Filt$`HU Amount (ug)`)
 
 
 
+library(readxl)
+
+# (X20200707_Protein_amount)
+cath_all         <- read_excel("20200707_Protein amount.xlsx", sheet = "on catheter")
+HU_all           <- read_excel("20200707_Protein amount.xlsx", sheet = "human urine solution")
+# merge original data file
+data_all <- merge(cath_all,HU_all, by = 'PG.UniProtIds')  # share a total of 885 cases
+
+
+# 20210713 Protein GRAVY value
+cath_gravy       <- read_excel("20210713 Protein GRAVY value.xlsx", sheet = "on catheter")
+HU_gravy         <- read_excel("20210713 Protein GRAVY value.xlsx", sheet = "in HU")
+# merge the gravy excel files
+data_gravy <- merge(cath_gravy,HU_gravy, by = 'PG.UniProtIds')
+
+
+## merging all the files into one 
+data_list <- list(cath_all, HU_all, cath_gravy, HU_gravy)      # Combine data frames to list
+my_merge <- function(df1, df2){                                # Create own merging function
+  merge(df1, df2, by = "PG.UniProtIds")
+}
+combine_df<-Reduce(my_merge, data_list)                            # Apply Reduce to own function
+dim(combine_df)  # have total of 885 cases sharing the same column ==> 'PG.UniProtIds'
+
+
+
+library(dplyr)
+# remove duplicate columns
+combine_df <- combine_df[, !duplicated(colnames(combine_df))]
+colnames(combine_df)
+
+# remove extra columns 
+combine_df<-select(combine_df, -c("PG.Genes.y" , 
+                      "PG.ProteinDescriptions.y", 
+                      "Sequence.y"  , 
+                      "GRAVY.y" , 
+                      "|GRAVY|.y"  ,
+                      "Sequence length.y", 
+                      "pI.y" , 
+                      "Lysine.y" ,
+                      "avg_mass.y" ,
+                      "PG.Genes.y"   ,
+                      "PG.ProteinDescriptions.y"))
+# rename the columns
+combine_df <- rename(combine_df, c( "PG.Genes" = "PG.Genes.x" ,           
+                                    "PG.ProteinDescriptions" = "PG.ProteinDescriptions.x",
+                                    "Sequence" = "Sequence.x"   ,          
+                                    "GRAVY" = "GRAVY.x"     ,            
+                                    "|GRAVY|" = "|GRAVY|.x"   ,            
+                                    "Sequence length"  = "Sequence length.x"  ,      
+                                    "pI" ="pI.x"                    ,
+                                    "Lysine"   = "Lysine.x"       ,          
+                                    "avg_mass"  = "avg_mass.x"  ))
+colnames(combine_df)
+dim(combine_df) # 885 cases and 18 columns
+
+# have some missing values need to remove
+combine_df2 <- na.omit(combine_df);dim(combine_df2) ## 885 --> 879 (have 10 cases with NA values)
+
+
+cor(combine_df2[,c(11,4:10,13:18)])
+
+pairs(combine_df2[,c(11,4:10,13:18)])
+pairs(combine_df2[,c(11,13:18)])
+pairs(combine_df2[,c(11,4:7,13:18)])
+
+pairs(log(combine_df2[,c(11,4:10,13:18)]))
+
+
+par(mfrow=c(2,4))
+plot(combine_df2$`5min (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`15min (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`30min (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`3h (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`6h (ug)`, combine_df2$GRAVY)
+
+plot(combine_df2$`18h (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`24h (ug)`, combine_df2$GRAVY)
+plot(combine_df2$`HU Amount (ug)`, combine_df2$GRAVY)
+
+
+
+
+par(mfrow=c(2,4))
+plot(combine_df2$`5min (ug)`, combine_df2$pI)
+plot(combine_df2$`15min (ug)`, combine_df2$pI)
+plot(combine_df2$`30min (ug)`, combine_df2$pI)
+plot(combine_df2$`3h (ug)`, combine_df2$pI)
+plot(combine_df2$`6h (ug)`, combine_df2$pI)
+
+plot(combine_df2$`18h (ug)`, combine_df2$pI)
+plot(combine_df2$`24h (ug)`, combine_df2$pI)
+plot(combine_df2$`HU Amount (ug)`, combine_df2$pI)
+
+plot(combine_df2$GRAVY)
+
+
+
+
+hist(combine_df2$GRAVY)
+
+plot(combine_df2$`Sequence length`)
+
+plot(combine_df2$pI)
+
+
+packages <- c("openxlsx", "readxl", "magrittr", "purrr", "ggplot2")
+
+if (!require(install.load)) {
+  install.packages("install.load")
+}
+
+install.load::install_load(packages)
+write.xlsx(combine_df2,"combine_df2.xlsx")
+
+
+
+
+
+
+
+############
+#     remove some outliers based on 3sd from the mean
+data = combine_df2[,4:11]
+data2 = data.Filt[,13:18]
+findOutlier <- function(data2, cutoff = 3) {
+  ## Calculate the sd
+  sds <- apply(data2, 2, sd, na.rm = TRUE)
+  ## Identify the cells with value greater than cutoff * sd (column wise)
+  result <- mapply(function(d, s) {
+    which(d > cutoff * s)
+  }, data2, sds)
+  result
+}
+## get a list of outliers for the samples based on data frame index
+outliers <- findOutlier(data2)
+outliers
+
+## remove the outliers
+removeOutlier <- function(data, outliers) {
+  result <- mapply(function(d, o) {
+    res <- d
+    res[o] <- NA
+    return(res)
+  }, data, outliers)
+  return(as.data.frame(result))
+}
+
+# each outlier is removed and replaced with NA
+dataFilt <- removeOutlier(data2, outliers)
+View(dataFilt)
+
+
+combine_df2[,c(4:11)] <- dataFilt[,c(1:8)]
+write.csv(combine_df2, "dataframe.withoutliers.csv")
+combine_df3<- combine_df2
+# omit every row that has NA value
+# from 879 --> 855 cases ==> (removed 24 total outliers)
+data.Filt<-na.omit(combine_df3)
+write.csv(data.Filt, 'cleaned up.csv')
+
+df.pivot<-  gather(data.Filt, Time, Value, "5min (ug)":"24h (ug)", factor_key = TRUE)
+write.csv( df.pivot, 'cleandatapilot.csv')
+
+plot(data.Filt$`5min (ug)`, data.Filt$pI)
+
+hist(data.Filt$GRAVY)
+hist(data.Filt$`|GRAVY|`)
+hist(data.Filt$pI)
+hist(data.Filt$Lysine)
 
 
 
