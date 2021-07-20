@@ -1,0 +1,37 @@
+library(readxl)
+library(data.table)
+
+# EPS, uncoated
+EPS_uncoated_30min        <- setDT(read_excel("20210716 bacteria protein.xlsx", sheet = "30min uncoated EPS"))
+EPS_uncoated_6h           <- setDT(read_excel("20210716 bacteria protein.xlsx", sheet = "6h uncoated EPS"))
+EPS_uncoated_24h          <- setDT(read_excel("20210716 bacteria protein.xlsx", sheet = "24h uncoated EPS"))
+
+
+
+
+df <- merge(EPS_uncoated_30min, EPS_uncoated_6h,  by = "PG.Genes" , all = TRUE)
+
+
+# merge original data file
+data_all <- merge(cath_all,HU_all, by = 'PG.UniProtIds')  # share a total of 885 cases
+
+
+
+
+
+df<-Reduce(merge, 
+       list(EPS_uncoated_30min$Percentage, EPS_uncoated_6h$Percentage, EPS_uncoated_24h$Percentage))
+
+
+
+
+
+
+
+
+
+
+install.packages('xlsx')
+library(xlsx)
+write.xlsx( x , file="Bacteria_Cleaned.xlsx", sheetName="EPS_percentages", row.names=FALSE)
+write.xlsx(x2 , file="Bacteria_Cleaned.xlsx", sheetName="Catheter_percentages", append=TRUE, row.names=FALSE)
