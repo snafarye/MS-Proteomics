@@ -1,0 +1,24 @@
+( (1/b-a) * ln( (a*(b-x))  /  (b*(a-b)) ) ) 
+
+
+# https://stackoverflow.com/questions/51181888/r-extracting-model-coefficients-from-a-nested-list-list-columns
+# code outline
+df=data.frame(x=rnorm(100),y1=rnorm(100),y2=rnorm(100),y3=rnorm(100))
+df
+
+storage <- list()
+storage2 <- list()
+for(i in names(df)[-1]){
+  storage[[i]] <- lm(get(i) ~ x, df)
+  storage2[[i]] <- summary(storage[[i]])$r.squared
+}
+storage  # get the linear reg equation
+storage2 # get the respected r^2 values of each column(y)
+
+# put the r^2 all into a organized data frame
+r_2 <-as.data.frame(do.call(rbind, storage2))   # Convert list to data frame rows
+
+coeff <- as.data.frame(do.call(rbind,storage))
+
+
+
