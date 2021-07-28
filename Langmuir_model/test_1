@@ -1,0 +1,38 @@
+library(readxl)
+df <- read_excel("20210728 combine_df2_first order kinetic.xlsx",sheet = "nmol")
+
+# remove the extra rows and columns we do not need 
+df <- df[-c(1:13),-c(1)]
+# Change colname of one column
+colnames(df)[colnames(df) == "...2"] <- "x"
+# remove all columns that have missing values NA
+library(dplyr)
+df<-df %>%   select(where(~!any(is.na(.))))
+dim(df)
+str(df)
+
+write.csv(df, "df.csv")
+df <- read_csv("df.csv")
+
+# https://stackoverflow.com/questions/51181888/r-extracting-model-coefficients-from-a-nested-list-list-columns
+# code outline
+#df=data.frame(x=rnorm(100),y1=rnorm(100),y2=rnorm(100),y3=rnorm(100))
+#df
+
+storage <- list()
+storage2 <- list()
+for(i in names(df)[-1]){
+  storage[[i]] <- lm(get(i) ~ x, df)
+  storage2[[i]] <- summary(storage[[i]])$r.squared
+}
+storage  # get the linear reg equation
+storage2 # get the respected r^2 values of each column(y)
+
+# put the r^2 all into a organized data frame
+r_2 <-as.data.frame(do.call(rbind, storage2));colnames(r_2)[colnames(r_2) == "V1"] <- "r_2"   # Convert list to data frame rows
+R_2 <- r_2
+R_2 <- R_2 %>% filter(r_2 >= 0.8)
+
+
+coeff <- as.data.frame(do.call(rbind,storage))
+
